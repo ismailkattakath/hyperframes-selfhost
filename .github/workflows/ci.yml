@@ -1,0 +1,34 @@
+# Community CI — no Nix required.
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  compose-config:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate compose file (no secrets required for config parse with placeholders)
+        run: |
+          cp .env.example .env
+          # Compose ${VAR:?} fails on empty required vars — seed dummies for parse-only
+          sed -i \
+            -e 's/^TS_AUTHKEY=.*/TS_AUTHKEY=tskey-auth-ci-dummy/' \
+            -e 's/^GOOGLE_CLIENT_ID=.*/GOOGLE_CLIENT_ID=ci.apps.googleusercontent.com/' \
+            -e 's/^GOOGLE_CLIENT_SECRET=.*/GOOGLE_CLIENT_SECRET=ci-secret/' \
+            -e 's/^GOOGLE_ALLOWED_USERS=.*/GOOGLE_ALLOWED_USERS=ci@example.com/' \
+            -e 's/^EXTERNAL_URL=.*/EXTERNAL_URL=https://ci.example.ts.net/' \
+            .env
+          docker compose config -q
+      - name: Ensure .env.example exists and .env is ignored
+        run: |
+          test -f .env.example
+          grep -qx '\.env' .gitignore || grep -q '^\.env' .gitignore
+      - name: Ensure Terraform is generated JSON only (no hand main.tf)
+        run: |
+          test -f terraform/config.tf.json
+          test ! -f terraform/main.tf
+          python3 -c 'import json; json.load(open("terraform/config.tf.json"))'

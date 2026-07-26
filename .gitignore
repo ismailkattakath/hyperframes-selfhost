@@ -1,0 +1,7 @@
+.env
+workspace/
+*.tfstate
+*.tfstate.*
+.terraform/
+.terraform.lock.hcl
+data/

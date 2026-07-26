@@ -1,0 +1,22 @@
+# Reverse proxy in front of mcp-auth-proxy.
+# TLS is terminated by Tailscale Funnel; Caddy speaks plain HTTP on the shared netns.
+:{$CADDY_HTTP_PORT:8080} {
+	# SSE / streamable HTTP need immediate flush
+	reverse_proxy 127.0.0.1:8090 {
+		flush_interval -1
+		transport http {
+			read_timeout 0
+			write_timeout 0
+		}
+	}
+
+	header {
+		X-Content-Type-Options nosniff
+		-Server
+	}
+
+	log {
+		output stdout
+		format console
+	}
+}

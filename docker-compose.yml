@@ -1,0 +1,87 @@
+# HyperFrames self-host stack — Linux VM only.
+# Funnel lives in the tailscale service; the Darwin host never runs this compose.
+#
+# Network model: tailscale owns the netns; caddy + mcp share it via
+# network_mode: service:tailscale so Funnel can proxy to 127.0.0.1:8080.
+
+name: hyperframes-selfhost
+
+services:
+  tailscale:
+    image: tailscale/tailscale:v1.84.0
+    container_name: hf-tailscale
+    hostname: ${TS_HOSTNAME:-hyperframes}
+    environment:
+      TS_AUTHKEY: ${TS_AUTHKEY:?set TS_AUTHKEY in .env}
+      TS_STATE_DIR: /var/lib/tailscale
+      TS_USERSPACE: "false"
+      # Serve/Funnel config (HTTPS 443 → Caddy :8080)
+      TS_SERVE_CONFIG: /config/serve.json
+      # Do not set TS_EXTRA_ARGS=--accept-dns=false: the official image already
+      # passes accept-dns via its own env wiring; a second flag makes
+      # `tailscale up` fail with "flag provided multiple times".
+    volumes:
+      - ts-state:/var/lib/tailscale
+      - ./config/serve.json:/config/serve.json:ro
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "tailscale", "status", "--json"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
+
+  caddy:
+    image: caddy:2.10-alpine
+    container_name: hf-caddy
+    network_mode: service:tailscale
+    depends_on:
+      tailscale:
+        condition: service_started
+    environment:
+      CADDY_HTTP_PORT: ${CADDY_HTTP_PORT:-8080}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+    restart: unless-stopped
+
+  mcp:
+    build:
+      context: ./image
+      dockerfile: Dockerfile
+    image: hyperframes-selfhost-mcp:local
+    container_name: hf-mcp
+    network_mode: service:tailscale
+    depends_on:
+      - caddy
+    environment:
+      EXTERNAL_URL: ${EXTERNAL_URL:?set EXTERNAL_URL in .env (https://<host>.ts.net)}
+      NO_AUTO_TLS: "true"
+      LISTEN: ${MCP_LISTEN:-:8090}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:?set GOOGLE_CLIENT_ID}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:?set GOOGLE_CLIENT_SECRET}
+      GOOGLE_ALLOWED_USERS: ${GOOGLE_ALLOWED_USERS:?set GOOGLE_ALLOWED_USERS}
+      DATA_PATH: /data
+      # Kinocut / HyperFrames
+      MCP_VIDEO_ANALYTICS: "0"
+      MCP_VIDEO_HYPERFRAMES_COMMAND: hyperframes
+      HOME: /home/app
+    volumes:
+      - mcp-data:/data
+      - ${WORKSPACE_DIR:-./workspace}:/workspace
+    working_dir: /workspace
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8090/healthz"]
+      interval: 20s
+      timeout: 5s
+      retries: 6
+      start_period: 60s
+
+volumes:
+  ts-state:
+  mcp-data:

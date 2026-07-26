@@ -1,0 +1,103 @@
+{
+  "locals": {
+    "env_content": "TS_AUTHKEY=${var.ts_authkey}\nTS_HOSTNAME=${var.ts_hostname}\nEXTERNAL_URL=${var.external_url}\nGOOGLE_CLIENT_ID=${var.google_client_id}\nGOOGLE_CLIENT_SECRET=${var.google_client_secret}\nGOOGLE_ALLOWED_USERS=${var.google_allowed_users}\nWORKSPACE_DIR=./workspace\nCADDY_HTTP_PORT=8080\nMCP_LISTEN=:8090\n",
+    "root": "${abspath(var.stack_dir)}"
+  },
+  "output": {
+    "architecture": {
+      "value": "Funnel(VM) → Caddy → mcp-auth-proxy(Google) → Kinocut+HyperFrames"
+    },
+    "mcp_url": {
+      "description": "MCP connector URL for Claude/Grok/Cursor",
+      "value": "${trimsuffix(var.external_url, \"/\")}/mcp"
+    },
+    "oauth_redirect_uri": {
+      "description": "Google OAuth Web client redirect URI",
+      "value": "${trimsuffix(var.external_url, \"/\")}/.auth/google/callback"
+    },
+    "operator_email": {
+      "description": "Default allowlisted operator (from flake identity)",
+      "value": "ismail@kattakath.com"
+    }
+  },
+  "resource": {
+    "local_sensitive_file": {
+      "env": {
+        "content": "${local.env_content}",
+        "file_permission": "0600",
+        "filename": "${local.root}/.env"
+      }
+    },
+    "null_resource": {
+      "compose_up": {
+        "depends_on": [
+          "local_sensitive_file.env",
+          "null_resource.workspace"
+        ],
+        "provisioner": {
+          "local-exec": {
+            "command": "docker compose up -d --build",
+            "working_dir": "${local.root}"
+          }
+        },
+        "triggers": {
+          "env_sha": "${sha256(local.env_content)}"
+        }
+      },
+      "workspace": {
+        "provisioner": {
+          "local-exec": {
+            "command": "mkdir -p '${local.root}/workspace'"
+          }
+        }
+      }
+    }
+  },
+  "terraform": {
+    "required_providers": {
+      "local": {
+        "source": "hashicorp/local",
+        "version": "~> 2.5"
+      },
+      "null": {
+        "source": "hashicorp/null",
+        "version": "~> 3.2"
+      }
+    },
+    "required_version": ">= 1.6.0"
+  },
+  "variable": {
+    "external_url": {
+      "default": "",
+      "description": "Public Funnel URL https://<node>.ts.net",
+      "type": "string"
+    },
+    "google_allowed_users": {
+      "default": "ismail@kattakath.com",
+      "description": "Comma-separated allowlisted emails (defaults to operatorEmail when empty at apply)",
+      "type": "string"
+    },
+    "google_client_id": {
+      "sensitive": true,
+      "type": "string"
+    },
+    "google_client_secret": {
+      "sensitive": true,
+      "type": "string"
+    },
+    "stack_dir": {
+      "default": ".",
+      "description": "Absolute path to packages/hyperframes-selfhost (or a published clone)",
+      "type": "string"
+    },
+    "ts_authkey": {
+      "description": "Tailscale auth key for the VM node",
+      "sensitive": true,
+      "type": "string"
+    },
+    "ts_hostname": {
+      "default": "hyperframes",
+      "type": "string"
+    }
+  }
+}
