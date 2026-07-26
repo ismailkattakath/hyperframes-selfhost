@@ -15,12 +15,13 @@ jobs:
         run: |
           cp .env.example .env
           # Compose ${VAR:?} fails on empty required vars — seed dummies for parse-only
+          # Use | as sed delimiter so URLs with / do not break the expression.
           sed -i \
-            -e 's/^TS_AUTHKEY=.*/TS_AUTHKEY=tskey-auth-ci-dummy/' \
-            -e 's/^GOOGLE_CLIENT_ID=.*/GOOGLE_CLIENT_ID=ci.apps.googleusercontent.com/' \
-            -e 's/^GOOGLE_CLIENT_SECRET=.*/GOOGLE_CLIENT_SECRET=ci-secret/' \
-            -e 's/^GOOGLE_ALLOWED_USERS=.*/GOOGLE_ALLOWED_USERS=ci@example.com/' \
-            -e 's/^EXTERNAL_URL=.*/EXTERNAL_URL=https://ci.example.ts.net/' \
+            -e 's|^TS_AUTHKEY=.*|TS_AUTHKEY=tskey-auth-ci-dummy|' \
+            -e 's|^GOOGLE_CLIENT_ID=.*|GOOGLE_CLIENT_ID=ci.apps.googleusercontent.com|' \
+            -e 's|^GOOGLE_CLIENT_SECRET=.*|GOOGLE_CLIENT_SECRET=ci-secret|' \
+            -e 's|^GOOGLE_ALLOWED_USERS=.*|GOOGLE_ALLOWED_USERS=ci@example.com|' \
+            -e 's|^EXTERNAL_URL=.*|EXTERNAL_URL=https://ci.example.ts.net|' \
             .env
           docker compose config -q
       - name: Ensure .env.example exists and .env is ignored
