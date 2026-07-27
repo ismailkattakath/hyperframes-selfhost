@@ -1,35 +1,80 @@
-# Community CI — no Nix required.
+# Required on PRs to main — static gates only (no live Tailscale/Google).
 name: ci
 
 on:
   push:
     branches: [main]
   pull_request:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
 
 jobs:
-  compose-config:
+  static:
+    name: static-checks
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Validate compose file (no secrets required for config parse with placeholders)
+
+      - name: Install ShellCheck + Hadolint
         run: |
-          cp .env.example .env
-          # Compose ${VAR:?} fails on empty required vars — seed dummies for parse-only
-          # Use | as sed delimiter so URLs with / do not break the expression.
-          sed -i \
-            -e 's|^TS_AUTHKEY=.*|TS_AUTHKEY=tskey-auth-ci-dummy|' \
-            -e 's|^GOOGLE_CLIENT_ID=.*|GOOGLE_CLIENT_ID=ci.apps.googleusercontent.com|' \
-            -e 's|^GOOGLE_CLIENT_SECRET=.*|GOOGLE_CLIENT_SECRET=ci-secret|' \
-            -e 's|^GOOGLE_ALLOWED_USERS=.*|GOOGLE_ALLOWED_USERS=ci@example.com|' \
-            -e 's|^EXTERNAL_URL=.*|EXTERNAL_URL=https://ci.example.ts.net|' \
-            .env
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq shellcheck
+          curl -sL -o /tmp/hadolint \
+            "https://github.com/hadolint/hadolint/releases/download/v2.12.0/hadolint-Linux-x86_64"
+          sudo install -m 0755 /tmp/hadolint /usr/local/bin/hadolint
+
+      - name: Seed dummy .env + compose config
+        run: |
+          chmod +x scripts/*.sh install.sh image/entrypoint.sh
+          ./scripts/ci-seed-env.sh
           docker compose config -q
-      - name: Ensure .env.example exists and .env is ignored
+
+      - name: Repo hygiene
         run: |
           test -f .env.example
-          grep -qx '\.env' .gitignore || grep -q '^\.env' .gitignore
-      - name: Ensure Terraform is generated JSON only (no hand main.tf)
-        run: |
+          test -f LICENSE
+          test -f SECURITY.md
+          test -f CONTRIBUTING.md
+          grep -qE '^\.env' .gitignore
           test -f terraform/config.tf.json
           test ! -f terraform/main.tf
           python3 -c 'import json; json.load(open("terraform/config.tf.json"))'
+
+      - name: ShellCheck
+        run: shellcheck -x install.sh scripts/*.sh image/entrypoint.sh
+
+      - name: Hadolint Dockerfile
+        run: |
+          # DL3008: apt versions float on slim bases; we pin app layers explicitly.
+          hadolint --ignore DL3008 --ignore DL3015 image/Dockerfile
+
+  gitleaks:
+    name: gitleaks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  trivy:
+    name: trivy-fs
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run Trivy vulnerability scanner (filesystem)
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          scan-type: fs
+          scan-ref: .
+          severity: CRITICAL,HIGH
+          exit-code: "1"
+          ignore-unfixed: true

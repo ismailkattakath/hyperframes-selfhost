@@ -1,153 +1,118 @@
 # HyperFrames Self-Host
 
-Self-host **Kinocut + HyperFrames** on a Linux VM with:
+[![CI](https://github.com/ismailkattakath/hyperframes-selfhost/actions/workflows/ci.yml/badge.svg)](https://github.com/ismailkattakath/hyperframes-selfhost/actions/workflows/ci.yml)
+[![Nightly](https://github.com/ismailkattakath/hyperframes-selfhost/actions/workflows/nightly.yml/badge.svg)](https://github.com/ismailkattakath/hyperframes-selfhost/actions/workflows/nightly.yml)
+[![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/ismailkattakath/hyperframes-selfhost/badge)](https://securityscorecards.dev/viewer/?uri=github.com/ismailkattakath/hyperframes-selfhost)
+[![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](./LICENSE)
+[![Tailscale Funnel](https://img.shields.io/badge/edge-Tailscale_Funnel-black)](https://tailscale.com/docs/features/tailscale-funnel)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](./CONTRIBUTING.md)
 
-| Layer | Tool | Why |
-| --- | --- | --- |
-| Public edge | **Tailscale Funnel** (VM only) | Host (Mac) stays isolated — no inbound, no Funnel on Darwin |
-| Reverse proxy | **Caddy** | Simple HTTP reverse proxy + SSE-friendly flush |
-| MCP OAuth | **[sigbit/mcp-auth-proxy](https://github.com/sigbit/mcp-auth-proxy)** | Battle-tested MCP OAuth 2.1 gateway (DCR/PKCE), Google IdP |
-| App | **[Kinocut](https://github.com/KyaniteLabs/kinocut)** | Guardrailed video MCP with **18 HyperFrames tools** + FFmpeg |
-| Renderer | **[HyperFrames](https://github.com/heygen-com/hyperframes)** CLI | Official open-source HTML → MP4 renderer (local, no HeyGen credits) |
+**Self-host a Kinocut + HyperFrames MCP** behind Google OAuth and Tailscale Funnel — local renders, no HeyGen cloud credits, host machine stays private.
 
-> **Important:** HeyGen’s hosted MCP (`mcp.heygen.com`) is a **cloud product** and is **not** open-source.
-> This stack self-hosts the open-source HyperFrames renderer behind Kinocut’s MCP surface.
+> **Not** the HeyGen-hosted product at `mcp.heygen.com`. That MCP is cloud-only.  
+> This project packages the **open-source** HyperFrames renderer with Kinocut’s MCP surface.
 
+<p align="center">
+  <img src="docs/diagrams/architecture.svg" alt="Architecture: Client → Funnel → Caddy → mcp-auth-proxy → Kinocut + HyperFrames" width="900" />
+</p>
+
+<p align="center">
+  <img src="docs/media/hero.jpg" alt="Conceptual illustration: public edge into private render stack" width="720" />
+</p>
+
+```mermaid
+flowchart LR
+  A[Claude / Grok / Cursor] -->|HTTPS| B[Tailscale Funnel]
+  B --> C[Caddy :8080]
+  C --> D[mcp-auth-proxy]
+  D -->|Google OAuth + allowlist| E[Kinocut MCP]
+  E --> F[HyperFrames CLI]
+  F --> G[Local MP4 workspace]
 ```
-Claude / Grok / Cursor
-        │ HTTPS
-        ▼
-Tailscale Funnel  (inside the Linux VM only)
-        │
-        ▼
-Caddy  (:8080)  ──reverse_proxy──▶  mcp-auth-proxy  ──stdio──▶  kino (Kinocut)
-                                                              └─ HyperFrames CLI
-```
 
-## One-command install (on the Linux VM)
+## Why this exists
+
+| You want | You get |
+| --- | --- |
+| Public MCP URL for cloud agents | Funnel only (no open home-router ports) |
+| Real OAuth for connectors | [mcp-auth-proxy](https://github.com/sigbit/mcp-auth-proxy) + Google Web client |
+| Email allowlist | `GOOGLE_ALLOWED_USERS` (never leave empty) |
+| Local video tools | [Kinocut](https://github.com/KyaniteLabs/kinocut) + [HyperFrames](https://github.com/heygen-com/hyperframes) |
+| No Nix required | `./install.sh` + Docker Compose |
+
+## Quick start
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/kattakath/hyperframes-selfhost/main/install.sh | bash
-```
-
-Or from a clone:
-
-```bash
-git clone https://github.com/kattakath/hyperframes-selfhost.git
+git clone https://github.com/ismailkattakath/hyperframes-selfhost.git
 cd hyperframes-selfhost
+cp .env.example .env
+# Fill: TS_AUTHKEY, GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GOOGLE_ALLOWED_USERS
 ./install.sh
 ```
 
-`install.sh` will (two-phase):
+Then:
 
-1. Check Docker + compose
-2. Copy `.env.example` → `.env` if missing; prompt for secrets
-3. Start **Tailscale only** → wait for MagicDNS
-4. Write `EXTERNAL_URL=https://<host>.ts.net`
-5. Build/start Caddy + mcp-auth-proxy + Kinocut
-6. Enable Funnel → `:8080` (or print the tailnet Funnel enable URL)
-7. Print MCP URL + Google redirect URI
+1. Add Google redirect URI printed by install:  
+   `https://<host>.ts.net/.auth/google/callback`
+2. Connect MCP client to:  
+   `https://<host>.ts.net/mcp`
+3. Log in with an allowlisted Google account
 
-Full checklist: [docs/hyperframes-selfhost.md](../../docs/hyperframes-selfhost.md) in the nix-config monorepo.
+Full checklist: [docs/SETUP.md](./docs/SETUP.md)
 
-## Prerequisites
+## Security posture
 
-### Runtime
-
-- Docker Engine 24+ and Compose v2 (**Linux**, or Docker Desktop’s Linux engine on Mac)
-- Outbound internet
-- Tailscale account; **Funnel enabled** on the tailnet (one-time admin click)
-
-### Google OAuth (Web application)
-
-1. [Google Cloud Console](https://console.cloud.google.com/) → Google Auth Platform
-2. Audience **External** (Internal needs Workspace)
-3. Create **OAuth client ID** → type **Web application** (not Desktop)
-4. After install prints the hostname, set **Authorized redirect URI**:
-   ```
-   https://<your-magicdns>.ts.net/.auth/google/callback
-   ```
-5. Prefer **Production** for long-lived MCP tokens (scopes are only openid/email/profile).  
-   **Testing** is fine for smoke tests; add the same emails as Test users.
-6. `GOOGLE_ALLOWED_USERS` must be **non-empty** comma-separated emails (proxy fail-open if empty).
-
-Allowlisting:
-
-- Proxy: `GOOGLE_ALLOWED_USERS` (authoritative for who may use the MCP)
-- Google Testing test-user list: only if you stay in Testing mode
-
-## Configuration
-
-Copy and edit env:
-
-```bash
-cp .env.example .env
-```
-
-| Variable | Required | Description |
-| --- | --- | --- |
-| `TS_AUTHKEY` | yes | Tailscale auth key (reusable recommended for first join) |
-| `TS_HOSTNAME` | no | MagicDNS name for the VM node (default `hyperframes`) |
-| `GOOGLE_CLIENT_ID` | yes | Google OAuth web client ID |
-| `GOOGLE_CLIENT_SECRET` | yes | Google OAuth client secret |
-| `GOOGLE_ALLOWED_USERS` | yes | Comma-separated allowlist, e.g. `you@example.com` |
-| `EXTERNAL_URL` | auto | Set by install to `https://<TS_HOSTNAME>.<tailnet>.ts.net` if empty |
-| `WORKSPACE_DIR` | no | Host path mounted for media I/O (default `./workspace`) |
-
-Secrets never go in git — only `.env` (gitignored).
-
-## Connect an MCP client
-
-After Funnel is up, add a **custom connector**:
-
-| Client | Server URL |
+| Control | Mechanism |
 | --- | --- |
-| Claude.ai / Claude Desktop | `https://<hostname>.ts.net/mcp` |
-| Grok | `https://<hostname>.ts.net/mcp` |
-| Cursor / other | same |
+| Auth | OAuth 2.1 via mcp-auth-proxy (PKCE / DCR-friendly clients) |
+| Authorization | Exact email allowlist (CSV); empty list is forbidden by entrypoint |
+| Exposure | Funnel on Linux engine only — not on your laptop’s Funnel by default |
+| Secrets | `.env` gitignored; never in image layers |
+| Supply chain | Dependabot, Trivy, Gitleaks, Hadolint, ShellCheck, nightly CI, Scorecard |
 
-On first connect the client runs OAuth → browser Google login → only allowlisted emails succeed.
+**No Codecov badge on purpose.** This is packaging/infra, not an app library — coverage % would be theater. We invest in **config validation + security scanners** instead. See [CONTRIBUTING.md](./CONTRIBUTING.md).
 
-## Day-2 ops
+Report vulnerabilities privately: [SECURITY.md](./SECURITY.md).
+
+## Credits & upstream
+
+This packaging stands on excellent open work:
+
+| Project | Role | Link |
+| --- | --- | --- |
+| **HyperFrames** (HeyGen OSS) | HTML → deterministic video | [github.com/heygen-com/hyperframes](https://github.com/heygen-com/hyperframes) · [docs](https://hyperframes.heygen.com/) |
+| **Kinocut** | Guardrailed video MCP + HyperFrames tools | [github.com/KyaniteLabs/kinocut](https://github.com/KyaniteLabs/kinocut) · [kinocut.dev](https://kinocut.dev/) |
+| **mcp-auth-proxy** | Drop-in MCP OAuth 2.1 gateway | [github.com/sigbit/mcp-auth-proxy](https://github.com/sigbit/mcp-auth-proxy) |
+| **Tailscale Funnel** | Public HTTPS without inbound NAT | [tailscale.com/docs](https://tailscale.com/docs/features/tailscale-funnel) |
+| **Caddy** | Reverse proxy | [caddyserver.com](https://caddyserver.com/) |
+| **Mother flake** (optional) | Nix/Terranix forge for maintainers | [github.com/kattakath/nix-config](https://github.com/kattakath/nix-config) |
+
+All trademarks remain with their owners. **Not affiliated with HeyGen’s hosted HyperFrames MCP.**
+
+## Ops
 
 ```bash
-docker compose logs -f mcp          # auth proxy + kinocut
-docker compose logs -f tailscale    # Funnel / MagicDNS
 docker compose ps
-docker compose restart mcp
-./scripts/doctor.sh                 # local health + auth discovery probe
+docker compose logs -f
+./scripts/doctor.sh
+./scripts/ci-static.sh   # same static gates as CI
 ```
 
-Rotate Google secret: update `.env` → `docker compose up -d mcp`.
+Disable public edge: `docker exec hf-tailscale tailscale funnel --https=443 off`
 
-Disable public access: `docker compose stop tailscale` (or remove Funnel in the Tailscale admin console). The stack stays reachable on the **tailnet only** if you switch Serve without Funnel.
+## Releases
 
-## Terraform / OpenTofu (optional, demoted)
+- Tags: `vMAJOR.MINOR.PATCH` (SemVer) → GitHub Release + source archive  
+- Changelog: [CHANGELOG.md](./CHANGELOG.md)  
+- Nightly: static gates on a schedule  
 
-**Prefer `./install.sh`.** The `terraform/` directory is a secondary helper only.
-Do not place terranix `config.tf.json` next to `main.tf` (duplicate resources).
-Secrets in local tfstate are a risk — use install.sh for v1 operations.
+## Contributing
 
-## Nix operators (source of truth)
+See [CONTRIBUTING.md](./CONTRIBUTING.md) and [CODE_OF_CONDUCT.md](./CODE_OF_CONDUCT.md).  
+Issue templates and PR checklist live under `.github/`.
 
-This tree is produced from the personal flake [kattakath/nix-config](https://github.com/kattakath/nix-config):
-
-```bash
-# On the Darwin host (nix-config checkout)
-nix run .#hf-export -- ./dist/hyperframes-selfhost
-# Then publish dist/ or rsync to the VM and run ./install.sh
-```
-
-Terranix module: `infra/hyperframes/stack.nix`  
-Runbook: `docs/hyperframes-selfhost.md` in nix-config.
-
-## Security model
-
-- **Darwin host**: no Funnel, no public ports, no HyperFrames service.
-- **Linux VM**: sole Funnel origin; Caddy only binds loopback shared with Tailscale.
-- **Auth**: MCP OAuth 2.1 via mcp-auth-proxy; Google OAuth + explicit `GOOGLE_ALLOWED_USERS` allowlist (never empty).
-- **Media**: workspace volume is local to the VM; no cloud render credits.
+Independent forks need **no Nix**. Upstream maintainers regenerate Terraform JSON from the mother flake — see [UPSTREAM.md](./UPSTREAM.md).
 
 ## License
 
-Apache-2.0 for this packaging. Upstream licenses: Kinocut (Apache-2.0), HyperFrames (Apache-2.0), mcp-auth-proxy (see upstream).
+Apache-2.0 — [LICENSE](./LICENSE). Third-party components keep their own licenses.
