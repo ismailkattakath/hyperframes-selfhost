@@ -1,0 +1,47 @@
+# Tag-driven releases (semver). Create with: git tag v0.1.0 && git push origin v0.1.0
+name: release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Build release archive (no secrets)
+        run: |
+          # shellcheck disable=SC2010
+          VERSION="${GITHUB_REF_NAME}"
+          STAGE="hyperframes-selfhost-${VERSION}"
+          mkdir -p "/tmp/${STAGE}"
+          rsync -a \
+            --exclude '.git' \
+            --exclude '.env' \
+            --exclude 'workspace' \
+            --exclude '.terraform' \
+            ./ "/tmp/${STAGE}/"
+          test -f "/tmp/${STAGE}/.env.example"
+          test ! -f "/tmp/${STAGE}/.env"
+          tar -C /tmp -czf "${STAGE}.tar.gz" "${STAGE}"
+          sha256sum "${STAGE}.tar.gz" > "${STAGE}.tar.gz.sha256"
+          echo "ASSET=${STAGE}.tar.gz" >> "$GITHUB_ENV"
+          echo "SUM=${STAGE}.tar.gz.sha256" >> "$GITHUB_ENV"
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          generate_release_notes: true
+          files: |
+            ${{ env.ASSET }}
+            ${{ env.SUM }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

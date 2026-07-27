@@ -1,0 +1,71 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 420" role="img" aria-label="HyperFrames self-host architecture">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0f172a"/>
+      <stop offset="100%" stop-color="#1e293b"/>
+    </linearGradient>
+    <linearGradient id="funnel" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#38bdf8"/>
+      <stop offset="100%" stop-color="#0284c7"/>
+    </linearGradient>
+    <linearGradient id="auth" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#a78bfa"/>
+      <stop offset="100%" stop-color="#7c3aed"/>
+    </linearGradient>
+    <linearGradient id="app" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#34d399"/>
+      <stop offset="100%" stop-color="#059669"/>
+    </linearGradient>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
+      <path d="M0,0 L8,3 L0,6 Z" fill="#94a3b8"/>
+    </marker>
+  </defs>
+  <rect width="960" height="420" rx="16" fill="url(#bg)"/>
+  <text x="40" y="48" fill="#f8fafc" font-family="ui-sans-serif,system-ui,sans-serif" font-size="22" font-weight="700">HyperFrames Self-Host</text>
+  <text x="40" y="74" fill="#94a3b8" font-family="ui-sans-serif,system-ui,sans-serif" font-size="13">Public Funnel · OAuth gate · local render — host stays private</text>
+
+  <!-- Client -->
+  <rect x="40" y="120" width="140" height="80" rx="12" fill="#334155" stroke="#64748b"/>
+  <text x="110" y="155" text-anchor="middle" fill="#f1f5f9" font-family="ui-sans-serif,system-ui,sans-serif" font-size="14" font-weight="600">Claude / Grok</text>
+  <text x="110" y="178" text-anchor="middle" fill="#94a3b8" font-family="ui-sans-serif,system-ui,sans-serif" font-size="12">MCP client</text>
+
+  <line x1="180" y1="160" x2="230" y2="160" stroke="#94a3b8" stroke-width="2" marker-end="url(#arrow)"/>
+  <text x="205" y="148" text-anchor="middle" fill="#64748b" font-family="ui-sans-serif,system-ui,sans-serif" font-size="11">HTTPS</text>
+
+  <!-- Funnel -->
+  <rect x="230" y="110" width="150" height="100" rx="12" fill="url(#funnel)"/>
+  <text x="305" y="150" text-anchor="middle" fill="#0f172a" font-family="ui-sans-serif,system-ui,sans-serif" font-size="14" font-weight="700">Tailscale</text>
+  <text x="305" y="170" text-anchor="middle" fill="#0f172a" font-family="ui-sans-serif,system-ui,sans-serif" font-size="14" font-weight="700">Funnel</text>
+  <text x="305" y="192" text-anchor="middle" fill="#e0f2fe" font-family="ui-sans-serif,system-ui,sans-serif" font-size="11">public edge</text>
+
+  <line x1="380" y1="160" x2="430" y2="160" stroke="#94a3b8" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- Caddy -->
+  <rect x="430" y="120" width="120" height="80" rx="12" fill="#475569" stroke="#94a3b8"/>
+  <text x="490" y="155" text-anchor="middle" fill="#f8fafc" font-family="ui-sans-serif,system-ui,sans-serif" font-size="14" font-weight="600">Caddy</text>
+  <text x="490" y="178" text-anchor="middle" fill="#cbd5e1" font-family="ui-sans-serif,system-ui,sans-serif" font-size="12">:8080 reverse</text>
+
+  <line x1="550" y1="160" x2="600" y2="160" stroke="#94a3b8" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- Auth -->
+  <rect x="600" y="110" width="150" height="100" rx="12" fill="url(#auth)"/>
+  <text x="675" y="148" text-anchor="middle" fill="#faf5ff" font-family="ui-sans-serif,system-ui,sans-serif" font-size="13" font-weight="700">mcp-auth-proxy</text>
+  <text x="675" y="170" text-anchor="middle" fill="#ede9fe" font-family="ui-sans-serif,system-ui,sans-serif" font-size="12">Google OAuth</text>
+  <text x="675" y="190" text-anchor="middle" fill="#ede9fe" font-family="ui-sans-serif,system-ui,sans-serif" font-size="11">email allowlist</text>
+
+  <line x1="750" y1="160" x2="800" y2="160" stroke="#94a3b8" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- App -->
+  <rect x="800" y="110" width="120" height="100" rx="12" fill="url(#app)"/>
+  <text x="860" y="150" text-anchor="middle" fill="#ecfdf5" font-family="ui-sans-serif,system-ui,sans-serif" font-size="13" font-weight="700">Kinocut</text>
+  <text x="860" y="172" text-anchor="middle" fill="#d1fae5" font-family="ui-sans-serif,system-ui,sans-serif" font-size="12">+ HyperFrames</text>
+  <text x="860" y="192" text-anchor="middle" fill="#d1fae5" font-family="ui-sans-serif,system-ui,sans-serif" font-size="11">local MP4</text>
+
+  <!-- VM box -->
+  <rect x="220" y="250" width="710" height="120" rx="14" fill="none" stroke="#475569" stroke-dasharray="6 4"/>
+  <text x="240" y="278" fill="#64748b" font-family="ui-sans-serif,system-ui,sans-serif" font-size="12" font-weight="600">Linux engine only (Docker / VM) — Darwin host never runs Funnel</text>
+  <text x="240" y="310" fill="#94a3b8" font-family="ui-sans-serif,system-ui,sans-serif" font-size="13">Secrets: TS_AUTHKEY · GOOGLE_CLIENT_* · GOOGLE_ALLOWED_USERS (never empty)</text>
+  <text x="240" y="338" fill="#94a3b8" font-family="ui-sans-serif,system-ui,sans-serif" font-size="13">Install: ./install.sh · MCP URL: https://&lt;host&gt;.ts.net/mcp</text>
+
+  <text x="40" y="400" fill="#64748b" font-family="ui-sans-serif,system-ui,sans-serif" font-size="11">Credits: Tailscale · Caddy · sigbit/mcp-auth-proxy · Kinocut · HyperFrames (HeyGen OSS) · not the hosted mcp.heygen.com product</text>
+</svg>

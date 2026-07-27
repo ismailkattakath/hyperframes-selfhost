@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Security vulnerability
+    url: https://github.com/ismailkattakath/hyperframes-selfhost/security/advisories/new
+    about: Report privately — do not open a public issue for security bugs
+  - name: HyperFrames upstream
+    url: https://github.com/heygen-com/hyperframes
+    about: Issues with the HyperFrames CLI/renderer itself
+  - name: Kinocut upstream
+    url: https://github.com/KyaniteLabs/kinocut
+    about: Issues with Kinocut MCP tools
