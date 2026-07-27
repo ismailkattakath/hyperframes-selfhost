@@ -1,4 +1,6 @@
 # Keep third-party pins fresh without Nix.
+# Majors for Node/Python bases are ignored — they break HyperFrames/Kinocut pins.
+# Patch/minor base bumps + Actions updates still open automatically for CI review.
 version: 2
 updates:
   - package-ecosystem: github-actions
@@ -9,6 +11,13 @@ updates:
     labels:
       - dependencies
       - github-actions
+    groups:
+      github-actions-minor:
+        patterns:
+          - "*"
+        update-types:
+          - minor
+          - patch
 
   - package-ecosystem: docker
     directory: "/image"
@@ -18,6 +27,13 @@ updates:
     labels:
       - dependencies
       - docker
+    ignore:
+      # Stay on Node 22 LTS until HyperFrames explicitly supports a newer major.
+      - dependency-name: "node"
+        update-types: ["version-update:semver-major"]
+      # Stay on Python 3.12 until Kinocut/mcp tooling is validated on newer.
+      - dependency-name: "python"
+        update-types: ["version-update:semver-major"]
 
   - package-ecosystem: docker
     directory: "/"

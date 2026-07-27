@@ -1,0 +1,78 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 480" role="img" aria-label="Trust boundaries: public edge, OAuth gate, private render">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#0b1220"/>
+      <stop offset="100%" stop-color="#111827"/>
+    </linearGradient>
+    <linearGradient id="public" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#0ea5e9" stop-opacity="0.25"/>
+      <stop offset="100%" stop-color="#0ea5e9" stop-opacity="0.08"/>
+    </linearGradient>
+    <linearGradient id="gate" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#a855f7" stop-opacity="0.28"/>
+      <stop offset="100%" stop-color="#a855f7" stop-opacity="0.1"/>
+    </linearGradient>
+    <linearGradient id="private" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#10b981" stop-opacity="0.28"/>
+      <stop offset="100%" stop-color="#10b981" stop-opacity="0.1"/>
+    </linearGradient>
+    <marker id="arr" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
+      <path d="M0,0 L8,3 L0,6 Z" fill="#94a3b8"/>
+    </marker>
+  </defs>
+
+  <rect width="960" height="480" rx="18" fill="url(#sky)"/>
+  <text x="40" y="44" fill="#f8fafc" font-family="ui-sans-serif,system-ui,sans-serif" font-size="22" font-weight="700">Trust boundaries</text>
+  <text x="40" y="70" fill="#94a3b8" font-family="ui-sans-serif,system-ui,sans-serif" font-size="13">What the internet can reach · what OAuth unlocks · what never leaves your box</text>
+
+  <!-- Zone: Public -->
+  <rect x="32" y="100" width="280" height="320" rx="16" fill="url(#public)" stroke="#38bdf8" stroke-width="1.5" stroke-dasharray="6 4"/>
+  <text x="52" y="128" fill="#7dd3fc" font-family="ui-sans-serif,system-ui,sans-serif" font-size="13" font-weight="700">① PUBLIC EDGE</text>
+  <text x="52" y="150" fill="#bae6fd" font-family="ui-sans-serif,system-ui,sans-serif" font-size="12">Tailscale Funnel only</text>
+
+  <rect x="56" y="180" width="232" height="70" rx="12" fill="#0c4a6e" stroke="#38bdf8"/>
+  <text x="172" y="210" text-anchor="middle" fill="#e0f2fe" font-family="ui-sans-serif,system-ui,sans-serif" font-size="14" font-weight="600">Internet agents</text>
+  <text x="172" y="232" text-anchor="middle" fill="#7dd3fc" font-family="ui-sans-serif,system-ui,sans-serif" font-size="12">Claude · Grok · Cursor</text>
+
+  <rect x="56" y="280" width="232" height="70" rx="12" fill="#075985" stroke="#38bdf8"/>
+  <text x="172" y="310" text-anchor="middle" fill="#e0f2fe" font-family="ui-sans-serif,system-ui,sans-serif" font-size="14" font-weight="600">Funnel HTTPS</text>
+  <text x="172" y="332" text-anchor="middle" fill="#7dd3fc" font-family="ui-sans-serif,system-ui,sans-serif" font-size="12">no open home ports</text>
+
+  <line x1="172" y1="250" x2="172" y2="280" stroke="#94a3b8" stroke-width="2" marker-end="url(#arr)"/>
+
+  <!-- Zone: Auth -->
+  <rect x="340" y="100" width="280" height="320" rx="16" fill="url(#gate)" stroke="#c084fc" stroke-width="1.5" stroke-dasharray="6 4"/>
+  <text x="360" y="128" fill="#e9d5ff" font-family="ui-sans-serif,system-ui,sans-serif" font-size="13" font-weight="700">② OAUTH GATE</text>
+  <text x="360" y="150" fill="#d8b4fe" font-family="ui-sans-serif,system-ui,sans-serif" font-size="12">mcp-auth-proxy + Google</text>
+
+  <rect x="364" y="180" width="232" height="70" rx="12" fill="#4c1d95" stroke="#c084fc"/>
+  <text x="480" y="210" text-anchor="middle" fill="#f3e8ff" font-family="ui-sans-serif,system-ui,sans-serif" font-size="14" font-weight="600">Caddy → proxy</text>
+  <text x="480" y="232" text-anchor="middle" fill="#d8b4fe" font-family="ui-sans-serif,system-ui,sans-serif" font-size="12">OAuth 2.1 + PKCE</text>
+
+  <rect x="364" y="280" width="232" height="70" rx="12" fill="#5b21b6" stroke="#c084fc"/>
+  <text x="480" y="310" text-anchor="middle" fill="#f3e8ff" font-family="ui-sans-serif,system-ui,sans-serif" font-size="14" font-weight="600">Email allowlist</text>
+  <text x="480" y="332" text-anchor="middle" fill="#d8b4fe" font-family="ui-sans-serif,system-ui,sans-serif" font-size="12">GOOGLE_ALLOWED_USERS</text>
+
+  <line x1="480" y1="250" x2="480" y2="280" stroke="#94a3b8" stroke-width="2" marker-end="url(#arr)"/>
+
+  <!-- Zone: Private -->
+  <rect x="648" y="100" width="280" height="320" rx="16" fill="url(#private)" stroke="#34d399" stroke-width="1.5" stroke-dasharray="6 4"/>
+  <text x="668" y="128" fill="#a7f3d0" font-family="ui-sans-serif,system-ui,sans-serif" font-size="13" font-weight="700">③ PRIVATE RENDER</text>
+  <text x="668" y="150" fill="#6ee7b7" font-family="ui-sans-serif,system-ui,sans-serif" font-size="12">never on the public net</text>
+
+  <rect x="672" y="180" width="232" height="70" rx="12" fill="#064e3b" stroke="#34d399"/>
+  <text x="788" y="210" text-anchor="middle" fill="#ecfdf5" font-family="ui-sans-serif,system-ui,sans-serif" font-size="14" font-weight="600">Kinocut MCP</text>
+  <text x="788" y="232" text-anchor="middle" fill="#6ee7b7" font-family="ui-sans-serif,system-ui,sans-serif" font-size="12">video tools surface</text>
+
+  <rect x="672" y="280" width="232" height="70" rx="12" fill="#065f46" stroke="#34d399"/>
+  <text x="788" y="310" text-anchor="middle" fill="#ecfdf5" font-family="ui-sans-serif,system-ui,sans-serif" font-size="14" font-weight="600">HyperFrames + disk</text>
+  <text x="788" y="332" text-anchor="middle" fill="#6ee7b7" font-family="ui-sans-serif,system-ui,sans-serif" font-size="12">local MP4 workspace</text>
+
+  <line x1="788" y1="250" x2="788" y2="280" stroke="#94a3b8" stroke-width="2" marker-end="url(#arr)"/>
+
+  <!-- Cross-zone arrows -->
+  <line x1="312" y1="215" x2="340" y2="215" stroke="#94a3b8" stroke-width="2" marker-end="url(#arr)"/>
+  <line x1="620" y1="215" x2="648" y2="215" stroke="#94a3b8" stroke-width="2" marker-end="url(#arr)"/>
+
+  <text x="480" y="450" text-anchor="middle" fill="#64748b" font-family="ui-sans-serif,system-ui,sans-serif" font-size="12">Secrets stay in .env · empty allowlist is refused · host machine is not the Funnel endpoint by default</text>
+</svg>
