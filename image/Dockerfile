@@ -8,7 +8,7 @@ RUN npm install -g "hyperframes@${HYPERFRAMES_VERSION}" \
   && command -v hyperframes \
   && (hyperframes --help >/dev/null 2>&1 || true)
 
-FROM python:3.12-slim-bookworm
+FROM python:3.14-slim-bookworm
 
 ARG MCP_AUTH_PROXY_VERSION=v2.10.2
 ARG TARGETARCH
