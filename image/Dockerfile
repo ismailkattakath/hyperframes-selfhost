@@ -1,7 +1,7 @@
 # Single image: mcp-auth-proxy (OAuth 2.1) + Kinocut (kino) + HyperFrames CLI.
 # aarch64/amd64 multi-arch friendly (Debian bookworm base).
 
-FROM node:22-bookworm-slim AS hyperframes-cli
+FROM node:26-bookworm-slim AS hyperframes-cli
 # Pin the 0.x HyperFrames CLI — floating @latest is not reproducible.
 ARG HYPERFRAMES_VERSION=0.7.73
 RUN npm install -g "hyperframes@${HYPERFRAMES_VERSION}" \
