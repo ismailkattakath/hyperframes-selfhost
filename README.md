@@ -3,6 +3,7 @@
 [![CI](https://github.com/ismailkattakath/hyperframes-selfhost/actions/workflows/ci.yml/badge.svg)](https://github.com/ismailkattakath/hyperframes-selfhost/actions/workflows/ci.yml)
 [![Nightly](https://github.com/ismailkattakath/hyperframes-selfhost/actions/workflows/nightly.yml/badge.svg)](https://github.com/ismailkattakath/hyperframes-selfhost/actions/workflows/nightly.yml)
 [![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/ismailkattakath/hyperframes-selfhost/badge)](https://securityscorecards.dev/viewer/?uri=github.com/ismailkattakath/hyperframes-selfhost)
+[![Release](https://img.shields.io/github/v/release/ismailkattakath/hyperframes-selfhost?include_prereleases&sort=semver)](https://github.com/ismailkattakath/hyperframes-selfhost/releases)
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](./LICENSE)
 [![Tailscale Funnel](https://img.shields.io/badge/edge-Tailscale_Funnel-black)](https://tailscale.com/docs/features/tailscale-funnel)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](./CONTRIBUTING.md)
@@ -14,6 +15,10 @@
 
 <p align="center">
   <img src="docs/diagrams/architecture.svg" alt="Architecture: Client → Funnel → Caddy → mcp-auth-proxy → Kinocut + HyperFrames" width="900" />
+</p>
+
+<p align="center">
+  <img src="docs/diagrams/trust-boundary.svg" alt="Trust boundaries: public Funnel edge, OAuth gate, private Kinocut + HyperFrames render" width="900" />
 </p>
 
 <p align="center">
@@ -29,6 +34,8 @@ flowchart LR
   E --> F[HyperFrames CLI]
   F --> G[Local MP4 workspace]
 ```
+
+Diagram sources and Excalidraw authoring notes: [docs/diagrams/](./docs/diagrams/).
 
 ## Why this exists
 

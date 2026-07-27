@@ -1,4 +1,4 @@
-Exported from kattakath/nix-config via nix run .#hf-export
+Exported from kattakath/nix-config via hf-export / polish sync
 Public product: https://github.com/ismailkattakath/hyperframes-selfhost
 TF: terraform/config.tf.json (Terranix-forged; do not pair with main.tf)
 Primary install: ./install.sh (Docker; no Nix required)
