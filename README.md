@@ -14,15 +14,21 @@
 > This project packages the **open-source** HyperFrames renderer with Kinocut’s MCP surface.
 
 <p align="center">
+  <a href="docs/media/readme-explainer.mp4">
+    <img src="docs/media/readme-explainer.webp" alt="HyperFrames Self-Host explainer: stack path from MCP client through Funnel, OAuth, Kinocut, and local HyperFrames renders" width="800" />
+  </a>
+</p>
+
+<p align="center">
+  <sub>24s silent explainer · rendered on this stack with HyperFrames · <a href="docs/media/readme-explainer.mp4">MP4</a> · <a href="examples/readme-explainer/">source composition</a></sub>
+</p>
+
+<p align="center">
   <img src="docs/diagrams/architecture.svg" alt="Architecture: Client → Funnel → Caddy → mcp-auth-proxy → Kinocut + HyperFrames" width="900" />
 </p>
 
 <p align="center">
   <img src="docs/diagrams/trust-boundary.svg" alt="Trust boundaries: public Funnel edge, OAuth gate, private Kinocut + HyperFrames render" width="900" />
-</p>
-
-<p align="center">
-  <img src="docs/media/hero.jpg" alt="Conceptual illustration: public edge into private render stack" width="720" />
 </p>
 
 ```mermaid

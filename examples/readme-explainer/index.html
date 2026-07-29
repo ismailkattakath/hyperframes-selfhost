@@ -1,0 +1,454 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <title>HyperFrames Self-Host — README Explainer</title>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        width: 1920px;
+        height: 1080px;
+        overflow: hidden;
+        background: #0b1220;
+        color: #f8fafc;
+        font-family: Inter, system-ui, sans-serif;
+      }
+      #root {
+        position: relative;
+        width: 1920px;
+        height: 1080px;
+        overflow: hidden;
+      }
+      .bg {
+        position: absolute;
+        inset: 0;
+        background:
+          radial-gradient(ellipse 900px 600px at 20% 15%, rgba(56, 189, 248, 0.14), transparent 60%),
+          radial-gradient(ellipse 800px 500px at 85% 80%, rgba(167, 139, 250, 0.12), transparent 55%),
+          linear-gradient(145deg, #0f172a 0%, #1e293b 55%, #0f172a 100%);
+      }
+      .grid {
+        position: absolute;
+        inset: 0;
+        opacity: 0.18;
+        background-image:
+          linear-gradient(rgba(148, 163, 184, 0.12) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(148, 163, 184, 0.12) 1px, transparent 1px);
+        background-size: 48px 48px;
+      }
+      .clip {
+        position: absolute;
+        inset: 0;
+      }
+      .scene {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 80px 100px;
+      }
+      .kicker {
+        font-size: 22px;
+        font-weight: 600;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        color: #38bdf8;
+        margin-bottom: 28px;
+      }
+      .title {
+        font-size: 88px;
+        font-weight: 750;
+        letter-spacing: -0.03em;
+        line-height: 1.05;
+        text-align: center;
+        color: #f8fafc;
+      }
+      .subtitle {
+        margin-top: 28px;
+        font-size: 34px;
+        font-weight: 500;
+        color: #94a3b8;
+        text-align: center;
+        max-width: 1400px;
+        line-height: 1.35;
+      }
+      .pill-row {
+        display: flex;
+        gap: 16px;
+        margin-top: 48px;
+        flex-wrap: wrap;
+        justify-content: center;
+      }
+      .pill {
+        padding: 14px 26px;
+        border-radius: 999px;
+        font-size: 22px;
+        font-weight: 600;
+        border: 1px solid rgba(148, 163, 184, 0.35);
+        background: rgba(30, 41, 59, 0.75);
+        color: #e2e8f0;
+      }
+      .pill.sky {
+        border-color: rgba(56, 189, 248, 0.45);
+        color: #7dd3fc;
+      }
+      .pill.violet {
+        border-color: rgba(167, 139, 250, 0.45);
+        color: #c4b5fd;
+      }
+      .pill.emerald {
+        border-color: rgba(52, 211, 153, 0.45);
+        color: #6ee7b7;
+      }
+
+      /* Stack scene */
+      .stack-wrap {
+        width: 100%;
+        max-width: 1680px;
+      }
+      .stack-title {
+        font-size: 42px;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+        margin-bottom: 48px;
+        text-align: center;
+      }
+      .stack {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 14px;
+        flex-wrap: nowrap;
+      }
+      .node {
+        width: 200px;
+        min-height: 130px;
+        border-radius: 18px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        padding: 18px 12px;
+        box-shadow: 0 18px 40px rgba(0, 0, 0, 0.28);
+      }
+      .node .name {
+        font-size: 22px;
+        font-weight: 700;
+        line-height: 1.2;
+      }
+      .node .role {
+        margin-top: 8px;
+        font-size: 15px;
+        font-weight: 500;
+        opacity: 0.85;
+      }
+      .node.client {
+        background: #334155;
+        border: 1px solid #64748b;
+        color: #f1f5f9;
+      }
+      .node.funnel {
+        background: linear-gradient(180deg, #38bdf8, #0284c7);
+        color: #0f172a;
+      }
+      .node.caddy {
+        background: #475569;
+        border: 1px solid #94a3b8;
+        color: #f8fafc;
+      }
+      .node.auth {
+        background: linear-gradient(180deg, #a78bfa, #7c3aed);
+        color: #0f172a;
+      }
+      .node.app {
+        background: linear-gradient(180deg, #34d399, #059669);
+        color: #052e1a;
+      }
+      .node.out {
+        background: #0c4a6e;
+        border: 1px solid #38bdf8;
+        color: #f0f9ff;
+      }
+      .node.out .role {
+        color: #f0f9ff;
+        opacity: 0.95;
+      }
+      .arrow {
+        font-size: 28px;
+        color: #94a3b8;
+        font-weight: 600;
+        flex-shrink: 0;
+      }
+      .stack-note {
+        margin-top: 40px;
+        text-align: center;
+        font-size: 24px;
+        color: #94a3b8;
+      }
+
+      /* Why cards */
+      .cards {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 28px;
+        width: 100%;
+        max-width: 1680px;
+        margin-top: 36px;
+      }
+      .card {
+        border-radius: 20px;
+        padding: 36px 28px;
+        background: rgba(30, 41, 59, 0.85);
+        border: 1px solid rgba(148, 163, 184, 0.28);
+        min-height: 280px;
+      }
+      .card .icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        display: grid;
+        place-items: center;
+        font-size: 22px;
+        font-weight: 800;
+        margin-bottom: 22px;
+      }
+      .card.sky .icon {
+        background: rgba(56, 189, 248, 0.18);
+        color: #38bdf8;
+      }
+      .card.violet .icon {
+        background: rgba(167, 139, 250, 0.18);
+        color: #a78bfa;
+      }
+      .card.emerald .icon {
+        background: rgba(52, 211, 153, 0.18);
+        color: #34d399;
+      }
+      .card.slate .icon {
+        background: rgba(148, 163, 184, 0.18);
+        color: #cbd5e1;
+      }
+      .card h3 {
+        font-size: 28px;
+        font-weight: 700;
+        margin-bottom: 14px;
+        letter-spacing: -0.02em;
+      }
+      .card p {
+        font-size: 20px;
+        line-height: 1.45;
+        color: #94a3b8;
+      }
+
+      /* CTA */
+      .code {
+        margin-top: 40px;
+        padding: 28px 40px;
+        border-radius: 16px;
+        background: #020617;
+        border: 1px solid #334155;
+        font-family: "JetBrains Mono", ui-monospace, monospace;
+        font-size: 28px;
+        color: #7dd3fc;
+        letter-spacing: -0.01em;
+      }
+      .repo {
+        margin-top: 28px;
+        font-size: 26px;
+        color: #94a3b8;
+      }
+      .badge-row {
+        display: flex;
+        gap: 14px;
+        margin-top: 36px;
+      }
+      .badge {
+        padding: 10px 18px;
+        border-radius: 8px;
+        font-size: 18px;
+        font-weight: 600;
+        background: rgba(15, 23, 42, 0.8);
+        border: 1px solid #334155;
+        color: #cbd5e1;
+      }
+      .footer-mark {
+        position: absolute;
+        inset: auto 0 36px 0;
+        height: auto;
+        text-align: center;
+        font-size: 16px;
+        color: #94a3b8;
+        letter-spacing: 0.04em;
+        pointer-events: none;
+      }
+    </style>
+  </head>
+  <body>
+    <div
+      id="root"
+      data-composition-id="main"
+      data-start="0"
+      data-duration="24"
+      data-width="1920"
+      data-height="1080"
+    >
+      <!-- Full-bleed ground (never on #root) -->
+      <div id="bg-fill" class="clip bg" data-start="0" data-duration="24" data-track-index="0"></div>
+      <div id="bg-grid" class="clip grid" data-start="0" data-duration="24" data-track-index="1"></div>
+
+      <!-- Scene 1: Hook 0–4 -->
+      <section id="scene-hook" class="clip" data-start="0" data-duration="4" data-track-index="2">
+        <div class="scene" id="s1">
+          <div class="kicker" id="s1-kicker">Open source · self-hosted</div>
+          <h1 class="title" id="s1-title">HyperFrames Self-Host</h1>
+          <p class="subtitle" id="s1-sub">
+            Kinocut + HyperFrames MCP behind Google OAuth and Tailscale Funnel
+          </p>
+          <div class="pill-row" id="s1-pills">
+            <span class="pill sky">Local renders</span>
+            <span class="pill violet">Real OAuth</span>
+            <span class="pill emerald">No cloud credits</span>
+            <span class="pill">Host stays private</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Scene 2: Stack 4–11 -->
+      <section id="scene-stack" class="clip" data-start="4" data-duration="7" data-track-index="2">
+        <div class="scene" id="s2">
+          <div class="stack-wrap">
+            <h2 class="stack-title" id="s2-title">Public edge. Private render path.</h2>
+            <div class="stack" id="s2-stack">
+              <div class="node client" id="n1">
+                <div class="name">Claude / Grok</div>
+                <div class="role">MCP client</div>
+              </div>
+              <div class="arrow" id="a1">→</div>
+              <div class="node funnel" id="n2">
+                <div class="name">Tailscale Funnel</div>
+                <div class="role">public HTTPS</div>
+              </div>
+              <div class="arrow" id="a2">→</div>
+              <div class="node caddy" id="n3">
+                <div class="name">Caddy</div>
+                <div class="role">:8080 reverse</div>
+              </div>
+              <div class="arrow" id="a3">→</div>
+              <div class="node auth" id="n4">
+                <div class="name">mcp-auth-proxy</div>
+                <div class="role">OAuth + allowlist</div>
+              </div>
+              <div class="arrow" id="a4">→</div>
+              <div class="node app" id="n5">
+                <div class="name">Kinocut</div>
+                <div class="role">video MCP</div>
+              </div>
+              <div class="arrow" id="a5">→</div>
+              <div class="node out" id="n6">
+                <div class="name">HyperFrames</div>
+                <div class="role">local MP4</div>
+              </div>
+            </div>
+            <p class="stack-note" id="s2-note">No open home-router ports. Secrets never leave your machine.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Scene 3: Why 11–17 -->
+      <section id="scene-why" class="clip" data-start="11" data-duration="6" data-track-index="2">
+        <div class="scene" id="s3">
+          <div class="kicker" id="s3-kicker">Why this exists</div>
+          <h2 class="title" style="font-size: 56px" id="s3-title">What you get</h2>
+          <div class="cards" id="s3-cards">
+            <div class="card sky" id="c1">
+              <div class="icon">01</div>
+              <h3>Public MCP URL</h3>
+              <p>Funnel only — cloud agents reach you without NAT holes or a public VPS.</p>
+            </div>
+            <div class="card violet" id="c2">
+              <div class="icon">02</div>
+              <h3>Real OAuth</h3>
+              <p>mcp-auth-proxy + Google Web client. Exact email allowlist. Empty list forbidden.</p>
+            </div>
+            <div class="card emerald" id="c3">
+              <div class="icon">03</div>
+              <h3>Local video tools</h3>
+              <p>Kinocut MCP surface + HyperFrames CLI renders HTML compositions to MP4.</p>
+            </div>
+            <div class="card slate" id="c4">
+              <div class="icon">04</div>
+              <h3>No Nix required</h3>
+              <p>Clone, fill .env, run install.sh. Docker Compose on a Linux host.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Scene 4: CTA 17–24 -->
+      <section id="scene-cta" class="clip" data-start="17" data-duration="7" data-track-index="2">
+        <div class="scene" id="s4">
+          <div class="kicker" id="s4-kicker">Quick start</div>
+          <h2 class="title" style="font-size: 64px" id="s4-title">Ship a private video MCP</h2>
+          <div class="code" id="s4-code">./install.sh &nbsp;→&nbsp; https://&lt;host&gt;.ts.net/mcp</div>
+          <div class="repo" id="s4-repo">github.com/ismailkattakath/hyperframes-selfhost</div>
+          <div class="badge-row" id="s4-badges">
+            <span class="badge">Apache-2.0</span>
+            <span class="badge">CI · Nightly · Scorecard</span>
+            <span class="badge">Not HeyGen cloud MCP</span>
+          </div>
+        </div>
+      </section>
+
+      <div id="footer-mark" class="clip footer-mark" data-start="0" data-duration="24" data-track-index="3">
+        Rendered with HyperFrames on the self-host stack · dogfooded
+      </div>
+    </div>
+
+    <script>
+      window.__timelines = window.__timelines || {};
+      const tl = gsap.timeline({ paused: true });
+
+      // Scene 1 (0–4)
+      tl.from("#s1-kicker", { opacity: 0, y: 24, duration: 0.55, ease: "power3.out" }, 0.15);
+      tl.from("#s1-title", { opacity: 0, y: 48, duration: 0.7, ease: "power3.out" }, 0.35);
+      tl.from("#s1-sub", { opacity: 0, y: 28, duration: 0.55, ease: "power3.out" }, 0.65);
+      tl.from("#s1-pills .pill", { opacity: 0, y: 20, duration: 0.4, stagger: 0.08, ease: "power2.out" }, 1.0);
+      tl.to("#s1", { opacity: 0, y: -16, duration: 0.35, ease: "power2.in" }, 3.55);
+
+      // Scene 2 (4–11) — absolute times on master timeline
+      tl.from("#s2-title", { opacity: 0, y: 32, duration: 0.55, ease: "power3.out" }, 4.1);
+      tl.from(
+        ["#n1", "#a1", "#n2", "#a2", "#n3", "#a3", "#n4", "#a4", "#n5", "#a5", "#n6"],
+        { opacity: 0, y: 28, scale: 0.92, duration: 0.4, stagger: 0.1, ease: "power2.out" },
+        4.55
+      );
+      tl.from("#s2-note", { opacity: 0, y: 16, duration: 0.45, ease: "power2.out" }, 6.2);
+      tl.to("#s2", { opacity: 0, y: -16, duration: 0.35, ease: "power2.in" }, 10.55);
+
+      // Scene 3 (11–17)
+      tl.from("#s3-kicker", { opacity: 0, y: 20, duration: 0.4, ease: "power3.out" }, 11.15);
+      tl.from("#s3-title", { opacity: 0, y: 28, duration: 0.5, ease: "power3.out" }, 11.3);
+      tl.from("#s3-cards .card", { opacity: 0, y: 36, duration: 0.5, stagger: 0.1, ease: "power2.out" }, 11.7);
+      tl.to("#s3", { opacity: 0, y: -16, duration: 0.35, ease: "power2.in" }, 16.55);
+
+      // Scene 4 (17–24)
+      tl.from("#s4-kicker", { opacity: 0, y: 20, duration: 0.4, ease: "power3.out" }, 17.15);
+      tl.from("#s4-title", { opacity: 0, y: 32, duration: 0.55, ease: "power3.out" }, 17.35);
+      tl.from("#s4-code", { opacity: 0, y: 24, scale: 0.98, duration: 0.5, ease: "power2.out" }, 17.85);
+      tl.from("#s4-repo", { opacity: 0, y: 16, duration: 0.4, ease: "power2.out" }, 18.3);
+      tl.from("#s4-badges .badge", { opacity: 0, y: 12, duration: 0.35, stagger: 0.08, ease: "power2.out" }, 18.6);
+
+      window.__timelines["main"] = tl;
+    </script>
+  </body>
+</html>
