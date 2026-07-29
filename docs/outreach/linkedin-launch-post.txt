@@ -1,0 +1,25 @@
+I got tired of the false choice on agent video:
+
+→ Hosted MCP = easy URL, but cloud credits + your work leaves the machine
+→ Local CLI = private, but cloud agents can’t reach you
+
+So I shipped HyperFrames Self-Host (Apache-2.0):
+
+Public MCP URL for Claude / Grok / Cursor
+↓ Tailscale Funnel (no open home-router ports)
+↓ Caddy
+↓ Google OAuth + exact email allowlist
+↓ Kinocut MCP
+↓ HyperFrames CLI → local MP4
+
+The dogfood proof: the README explainer video was rendered on this stack.
+
+Not the HeyGen cloud product at mcp.heygen.com — this packages the open-source HyperFrames renderer with Kinocut’s MCP surface, behind a real OAuth gate.
+
+Clone → fill .env → ./install.sh. No Nix required.
+
+If you’re building agent workflows that need video without giving up privacy, I’d love a star, a fork, or a brutal review of the threat model.
+
+https://github.com/ismailkattakath/hyperframes-selfhost
+
+#MCP #OpenSource #HyperFrames #Tailscale #SelfHosted #AgenticAI #VideoAI
