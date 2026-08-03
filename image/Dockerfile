@@ -48,14 +48,18 @@ COPY --from=hyperframes-cli /usr/local/bin/node /usr/local/bin/node
 COPY --from=hyperframes-cli /usr/local/bin/npm /usr/local/bin/npm
 COPY --from=hyperframes-cli /usr/local/bin/npx /usr/local/bin/npx
 COPY --from=hyperframes-cli /usr/local/lib/node_modules /usr/local/lib/node_modules
-RUN if [ -e /usr/local/lib/node_modules/hyperframes ]; then \
-      ln -sfn /usr/local/lib/node_modules/hyperframes/bin/hyperframes /usr/local/bin/hyperframes \
-      || ln -sfn ../lib/node_modules/.bin/hyperframes /usr/local/bin/hyperframes \
-      || true; \
+# The hyperframes package's bin entry is bin/hyperframes.mjs (node-shebang), not a
+# bare `hyperframes` file — resolve the real bin from package.json so the CLI lands
+# on PATH (fixes the runtime "hyperframes CLI not on PATH" warning + broken tools).
+RUN set -eux; \
+    if [ -e /usr/local/lib/node_modules/hyperframes ]; then \
+      bin="$(node -e 'const p=require("/usr/local/lib/node_modules/hyperframes/package.json").bin; const rel=(typeof p==="string")?p:p.hyperframes; process.stdout.write("/usr/local/lib/node_modules/hyperframes/"+rel)' 2>/dev/null || echo /usr/local/lib/node_modules/hyperframes/bin/hyperframes.mjs)"; \
+      ln -sfn "$bin" /usr/local/bin/hyperframes; \
+      hyperframes --help >/dev/null 2>&1 || true; \
     fi
 
 # Kinocut (MCP video surface + HyperFrames tools)
-RUN pip install --no-cache-dir "kinocut[image]==1.11.1"
+RUN pip install --no-cache-dir "kinocut[image]==1.11.1" "mcp<2"
 # mcp-auth-proxy static binary (release assets are plain binaries, not archives)
 RUN set -eux; \
   arch="${TARGETARCH:-amd64}"; \
