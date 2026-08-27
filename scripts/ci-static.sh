@@ -28,7 +28,8 @@ else
 fi
 
 if command -v hadolint >/dev/null 2>&1; then
-  run hadolint image/Dockerfile || true
+  # DL3008: apt versions float on slim bases; we pin app layers explicitly.
+  run hadolint --ignore DL3008 --ignore DL3015 image/Dockerfile
 else
   echo "WARN: hadolint not installed (CI installs it)"
 fi
