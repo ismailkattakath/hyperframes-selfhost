@@ -59,6 +59,7 @@ RUN set -eux; \
     fi
 
 # Kinocut (MCP video surface + HyperFrames tools)
+# mcp is capped below 2.0: Kinocut 1.11.1 crashes on the mcp 2.x API.
 RUN pip install --no-cache-dir "kinocut[image]==1.11.1" "mcp<2"
 # mcp-auth-proxy static binary (release assets are plain binaries, not archives)
 RUN set -eux; \
