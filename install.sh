@@ -40,6 +40,11 @@ if [[ "$(uname -s)" == "Darwin" ]]; then
 fi
 
 need_cmd docker
+# python3 parses `tailscale status --json` to get the MagicDNS name. Without it
+# that parse silently yields nothing, the poll below burns its full 180s
+# deadline, and the script then dies telling you to check TS_AUTHKEY — blaming
+# the wrong thing entirely. Fail here with the real reason instead.
+need_cmd python3
 docker compose version >/dev/null 2>&1 || die "Docker Compose v2 required (docker compose)"
 docker info >/dev/null 2>&1 || die "Docker daemon not running (start Docker Desktop / dockerd)"
 
