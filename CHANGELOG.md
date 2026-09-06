@@ -19,6 +19,12 @@ Versioning follows [SemVer](https://semver.org/) for tagged releases.
 - `hyperframes` CLI symlink resolved from the package's `bin` entry, so the CLI
   actually lands on `PATH` (was: "hyperframes CLI not on PATH" at runtime)
 
+### Security
+
+- CI checks the Hadolint release binary against a pinned sha256 before running
+  it, and installs it as the runner user instead of `sudo`-ing it into
+  `/usr/local/bin` (was: an unverified `curl` on every PR)
+
 ## [0.1.0] — 2026-07-27
 
 ### Added
